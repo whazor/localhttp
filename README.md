@@ -1,12 +1,18 @@
 # localhttp
 
-`localhttp` is a small Axum front door for local development apps.
+`localhttp` is a CLI for giving local development apps stable
+`*.localhost` URLs.
 
-It runs one HTTP/HTTPS reverse proxy on `:80` and `:443`, and the CLI registers
-`*.localhost` names with the running daemon:
+It has two parts:
+
+- `localhttp serve` runs one HTTP/HTTPS reverse proxy on `:80` and `:443`.
+- `localhttp <app-name>` registers an app name with the running daemon and
+  prints a backend port for that app.
+
+Example:
 
 ```sh
-port="$(nix run path:. -- test-app)"
+port="$(localhttp test-app)"
 my-test-app --port "$port"
 ```
 
@@ -24,18 +30,11 @@ app creates or refreshes that app's certificate when certificates have already
 been initialized, and the running HTTPS server reloads certificates after they
 change.
 
-## Development
-
-```sh
-nix develop path:.
-cargo test
-```
-
 More documentation lives in [docs/](docs/).
 
-## Running
+## Start The Daemon
 
-Run the front door with your service manager so it can bind ports `80` and
+Run `localhttp serve` with your service manager so it can bind ports `80` and
 `443` without keeping a manual root shell around:
 
 ```sh
@@ -58,10 +57,10 @@ templates.
 
 ## Certificates
 
-The flake includes `mkcert`. Generate local trusted certificates:
+Generate local trusted certificates:
 
 ```sh
-nix run path:. -- certs
+localhttp certs
 ```
 
 By default this hands certificates to the running `localhttp serve` process over
@@ -74,16 +73,16 @@ By default this hands certificates to the running `localhttp serve` process over
 For unprivileged development:
 
 ```sh
-nix run path:. -- serve --http-only --http-addr 127.0.0.1:8080
+localhttp serve --http-only --http-addr 127.0.0.1:8080
 ```
 
 Useful commands:
 
 ```sh
-nix run path:. -- test-app
-nix run path:. -- list
-nix run path:. -- clear test-app
-nix run path:. -- clear --all
+localhttp test-app
+localhttp list
+localhttp clear test-app
+localhttp clear --all
 ```
 
 ## Notes
