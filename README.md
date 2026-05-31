@@ -35,10 +35,15 @@ More documentation lives in [docs/](docs/).
 
 ## Running
 
-Run the front door as root so it can bind ports `80` and `443`:
+Run the front door with your service manager so it can bind ports `80` and
+`443` without keeping a manual root shell around:
 
 ```sh
-sudo localhttp serve
+# Linux, after installing contrib/systemd/localhttp.service
+sudo systemctl enable --now localhttp.service
+
+# macOS, after installing contrib/launchd/dev.localhttp.plist
+sudo launchctl bootstrap system /Library/LaunchDaemons/dev.localhttp.plist
 ```
 
 Normal users can register routes with the same binary while `serve` is running:
@@ -47,6 +52,9 @@ Normal users can register routes with the same binary while `serve` is running:
 port="$(localhttp test-app)"
 my-test-app --port "$port"
 ```
+
+See [Service Managers](docs/service-managers.md) for systemd and launchd
+templates.
 
 ## Certificates
 

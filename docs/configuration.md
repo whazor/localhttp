@@ -16,11 +16,9 @@ Control socket resolution order:
 The daemon owns the route registry in memory. There is no shared route file, and
 routes are cleared when `localhttp serve` restarts.
 
-Example:
-
-```sh
-sudo localhttp serve
-```
+Start the daemon through a service manager for the default privileged
+listeners. See [Service Managers](service-managers.md) for systemd and launchd
+templates.
 
 Then, in another shell:
 

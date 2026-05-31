@@ -42,9 +42,8 @@ the printed port immediately.
 
 Runs the Axum reverse proxy server.
 
-```sh
-sudo localhttp serve
-```
+For the default privileged listeners, run it through a service manager. See
+[Service Managers](service-managers.md) for systemd and launchd templates.
 
 Default listeners:
 

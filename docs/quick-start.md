@@ -12,11 +12,15 @@ The docs use `nix run path:. -- ...` for commands run from this checkout. If
 
 ## Run the front door
 
-Binding directly to ports `80` and `443` usually requires privileges:
+Binding directly to ports `80` and `443` usually requires privileges. For the
+default listeners, install the daemon as a systemd or launchd service:
 
 ```sh
-sudo nix run path:. -- serve
+nix build path:.
+sudo install -m 0755 result/bin/localhttp /usr/local/bin/localhttp
 ```
+
+Then follow [Service Managers](service-managers.md) for your platform.
 
 For unprivileged development, use an alternate HTTP port:
 

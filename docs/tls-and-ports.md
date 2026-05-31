@@ -50,12 +50,13 @@ The default server addresses are:
 On Linux, binding ports below `1024` generally requires one of:
 
 - running as root
-- a service manager that opens the socket
+- a service manager that runs the daemon with privileges
 - a capability such as `CAP_NET_BIND_SERVICE`
 - a local firewall or proxy rule that forwards privileged ports to unprivileged ports
 
 The current binary binds its sockets directly. It does not yet include systemd
-socket activation.
+socket activation. See [Service Managers](service-managers.md) for systemd and
+launchd service templates.
 
 ## Unprivileged development mode
 

@@ -15,15 +15,15 @@ The current implementation is intentionally small:
 - [Quick start](quick-start.md)
 - [Command reference](commands.md)
 - [Configuration](configuration.md)
+- [Service managers](service-managers.md)
 - [TLS and privileged ports](tls-and-ports.md)
 - [Architecture](architecture.md)
 - [Development](development.md)
 
 ## Basic flow
 
-Start the front door:
-
-Run the shared front door as root, then register app routes as a normal user.
+Start the shared front door through systemd or launchd, then register app
+routes as a normal user.
 
 Register an app and start it on the returned port:
 

@@ -39,7 +39,7 @@ flowchart LR
 sequenceDiagram
     participant User
     participant CLI as localhttp <app-name>
-    participant Serve as root localhttp serve
+    participant Serve as privileged localhttp serve
     participant Mkcert as mkcert
     participant Browser
     participant App as backend app
@@ -140,5 +140,5 @@ flowchart LR
     CertEnv["LOCALHTTP_CERT_DIR"] --> CertPath["cert directory"]
     TmpCerts["/tmp/localhttp/certs"] --> CertPath
 
-    ServeEnv["sudo env<br/>LOCALHTTP_SERVE_SOCKET=/tmp/localhttp/serve.sock<br/>LOCALHTTP_CERT_DIR=/tmp/localhttp/certs"] --> RootServe["root localhttp serve"]
+    ServeEnv["systemd or launchd<br/>LOCALHTTP_SERVE_SOCKET=/tmp/localhttp/serve.sock<br/>LOCALHTTP_CERT_DIR=/tmp/localhttp/certs"] --> RootServe["privileged localhttp serve"]
 ```
