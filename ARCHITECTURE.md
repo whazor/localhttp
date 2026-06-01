@@ -27,7 +27,7 @@ flowchart LR
     Installer --> Certs["/tmp/localhttp/certs/*.pem"]
     Proxy --> Routes
     Proxy --> Certs
-    Proxy --> Backend["127.0.0.1:<registered-port>"]
+    Proxy --> Backend["localhost:<registered-port>"]
 
     Browser["Browser / curl"] --> DNS["<app>.localhost resolves to loopback"]
     DNS --> Proxy
@@ -108,7 +108,7 @@ flowchart TD
     Match --> Routes
     Routes --> Route{"route exists?"}
     Route -- no --> NotFound["404"]
-    Route -- yes --> Forward["proxy to http://127.0.0.1:<port>"]
+    Route -- yes --> Forward["proxy to http://localhost:<port>"]
 ```
 
 ## Serve Module Layers

@@ -19,7 +19,7 @@ my-test-app --port "$port"
 Opening `https://test-app.localhost/` proxies to the registered backend:
 
 ```text
-http://127.0.0.1:<port>/
+http://localhost:<port>/
 ```
 
 The backend receives `Host`, `X-Forwarded-Proto`, and `X-Forwarded-Host`

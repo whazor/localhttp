@@ -73,7 +73,7 @@ pub(crate) fn list_routes() -> Result<()> {
     };
 
     for (name, route) in routes {
-        println!("{name}.localhost -> http://127.0.0.1:{}", route.port);
+        println!("{name}.localhost -> http://localhost:{}", route.port);
     }
 
     Ok(())
@@ -317,8 +317,25 @@ pub(crate) fn normalize_app_name(name: &str) -> Result<String> {
 }
 
 pub(crate) fn allocate_port() -> Result<u16> {
-    let listener = TcpListener::bind(("127.0.0.1", 0)).context("failed to allocate local port")?;
-    Ok(listener.local_addr()?.port())
+    for _ in 0..16 {
+        let ipv4 = TcpListener::bind(("127.0.0.1", 0)).context("failed to allocate local port")?;
+        let port = ipv4.local_addr()?.port();
+
+        match TcpListener::bind(("::1", port)) {
+            Ok(_ipv6) => return Ok(port),
+            Err(err) if is_ipv6_unavailable(&err) => return Ok(port),
+            Err(_) => continue,
+        }
+    }
+
+    bail!("failed to allocate a port available on both 127.0.0.1 and ::1")
+}
+
+fn is_ipv6_unavailable(err: &std::io::Error) -> bool {
+    matches!(
+        err.kind(),
+        std::io::ErrorKind::AddrNotAvailable | std::io::ErrorKind::Unsupported
+    )
 }
 
 pub(crate) fn cert_dir() -> Result<PathBuf> {

@@ -86,7 +86,7 @@ https://test-app.localhost/some/path?x=1
 The backend request target is:
 
 ```text
-http://127.0.0.1:<registered-port>/some/path?x=1
+http://localhost:<registered-port>/some/path?x=1
 ```
 
 The proxy preserves the path and query string and sends forwarding headers such

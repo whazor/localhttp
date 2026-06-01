@@ -12,7 +12,7 @@ port="$(localhttp test-app)"
 This registers:
 
 ```text
-test-app.localhost -> http://127.0.0.1:<port>
+test-app.localhost -> http://localhost:<port>
 ```
 
 App names are normalized to lowercase and may contain only ASCII letters,
@@ -35,8 +35,8 @@ test_app
 ```
 
 The generated port is allocated by `localhttp serve` by binding `127.0.0.1:0`,
-reading the chosen port, then closing the listener. The backend app should bind
-the printed port immediately.
+checking the same port on `::1` when IPv6 loopback is available, then closing
+the listeners. The backend app should bind the printed port immediately.
 
 ## `localhttp serve`
 
@@ -143,7 +143,7 @@ localhttp list
 Example output:
 
 ```text
-test-app.localhost -> http://127.0.0.1:42055
+test-app.localhost -> http://localhost:42055
 ```
 
 ## `localhttp clear`

@@ -118,7 +118,7 @@ fn proxy_target(
         .path_and_query()
         .map(|value| value.as_str())
         .unwrap_or("/");
-    let uri = format!("http://127.0.0.1:{}{}", route.port, path)
+    let uri = format!("http://localhost:{}{}", route.port, path)
         .parse()
         .context("failed to build backend URI")?;
 
@@ -153,7 +153,12 @@ fn host_name(host: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, RwLock};
+    use std::{
+        io::{Read, Write},
+        net::TcpListener,
+        sync::{Arc, RwLock},
+        thread,
+    };
 
     use super::*;
     use crate::port::{Registry, Route};
@@ -176,7 +181,7 @@ mod tests {
         assert!(prepare_proxy_request(&state, &mut request).unwrap());
         assert_eq!(
             request.uri().to_string(),
-            "http://127.0.0.1:43210/reports?range=today"
+            "http://localhost:43210/reports?range=today"
         );
         assert_eq!(request.version(), Version::HTTP_11);
         assert_eq!(request.headers()[header::HOST], "test-app.localhost");
@@ -201,7 +206,7 @@ mod tests {
         assert!(prepare_proxy_request(&state, &mut request).unwrap());
         assert_eq!(
             request.uri().to_string(),
-            "http://127.0.0.1:43210/reports?range=today"
+            "http://localhost:43210/reports?range=today"
         );
         assert_eq!(request.version(), Version::HTTP_11);
         assert_eq!(request.headers()[header::HOST], "test-app.localhost");
@@ -219,5 +224,68 @@ mod tests {
                 },
             )]),
         }))
+    }
+
+    #[tokio::test]
+    async fn client_reaches_ipv4_only_localhost_backend() {
+        let listener = match TcpListener::bind("127.0.0.1:0") {
+            Ok(listener) => listener,
+            Err(err) => {
+                eprintln!("skipping IPv4 localhost test: {err}");
+                return;
+            }
+        };
+        let port = listener.local_addr().unwrap().port();
+        let server = spawn_http_once(listener);
+
+        let response = client()
+            .request(
+                Request::builder()
+                    .uri(format!("http://localhost:{port}/"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+        server.join().unwrap();
+    }
+
+    #[tokio::test]
+    async fn client_reaches_ipv6_only_localhost_backend() {
+        let listener = match TcpListener::bind("[::1]:0") {
+            Ok(listener) => listener,
+            Err(err) => {
+                eprintln!("skipping IPv6 localhost test: {err}");
+                return;
+            }
+        };
+        let port = listener.local_addr().unwrap().port();
+        let server = spawn_http_once(listener);
+
+        let response = client()
+            .request(
+                Request::builder()
+                    .uri(format!("http://localhost:{port}/"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+        server.join().unwrap();
+    }
+
+    fn spawn_http_once(listener: TcpListener) -> thread::JoinHandle<()> {
+        thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buffer = [0; 1024];
+            let _ = stream.read(&mut buffer).unwrap();
+            stream
+                .write_all(b"HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n")
+                .unwrap();
+        })
     }
 }

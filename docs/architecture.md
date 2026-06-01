@@ -60,7 +60,7 @@ https://test-app.localhost/
 The backend receives requests at:
 
 ```text
-http://127.0.0.1:<port>/
+http://localhost:<port>/
 ```
 
 For a TLS request to `https://test-app.localhost/`, the proxied request includes:
@@ -75,8 +75,8 @@ WebSocket proxying is not implemented.
 
 ## Port Allocation Caveat
 
-The daemon asks the OS for a free port by binding `127.0.0.1:0`, reading the
-assigned port, and closing the listener.
+The daemon asks the OS for a free port by binding `127.0.0.1:0`, checking the
+same port on `::1` when IPv6 loopback is available, and closing the listeners.
 
 Because the listener is closed before the backend starts, there is a small race:
 another process could claim the port. In normal development usage this is rare,

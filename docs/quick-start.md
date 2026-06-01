@@ -62,7 +62,7 @@ The registration command asks the running daemon for a currently free port and
 stores this route in daemon memory:
 
 ```text
-test-app.localhost -> http://127.0.0.1:<port>
+test-app.localhost -> http://localhost:<port>
 ```
 
 The port is not reserved after registration returns. Start the app promptly so

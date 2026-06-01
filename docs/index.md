@@ -7,7 +7,7 @@ The current implementation is intentionally small:
 
 - `localhttp <app-name>` registers `<app-name>.localhost` and prints a free port.
 - `localhttp serve` runs the Axum reverse proxy server on HTTP and HTTPS.
-- Requests for `<app-name>.localhost` proxy to `http://127.0.0.1:<port>`.
+- Requests for `<app-name>.localhost` proxy to `http://localhost:<port>`.
 - `localhttp certs` creates trusted local certificates with `mkcert`.
 
 ## Pages
@@ -41,7 +41,7 @@ https://test-app.localhost/
 The backend receives a proxied request at:
 
 ```text
-http://127.0.0.1:<port>/
+http://localhost:<port>/
 ```
 
 For HTTPS requests, the proxied request includes:
