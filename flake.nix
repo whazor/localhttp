@@ -47,7 +47,7 @@
               !(name == "target" || name == ".git" || name == "result");
           };
 
-          cargoHash = "sha256-E0lqj8TBMjQjZnfeLNqRU/nZn/JlfPT5tWxGObKUGug=";
+          cargoHash = "sha256-brmY2ifcBGrCoEiGfJU4dLl4gp1tGtNrOZTkkNI50DU=";
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
 

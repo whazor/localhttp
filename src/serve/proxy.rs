@@ -1,4 +1,11 @@
-use std::collections::BTreeMap;
+use std::{
+    collections::BTreeMap,
+    future::Future,
+    io,
+    net::{Ipv4Addr, Ipv6Addr, SocketAddr},
+    pin::Pin,
+    task::{Context as TaskContext, Poll},
+};
 
 use anyhow::{Context, Result};
 use axum::{
@@ -9,16 +16,63 @@ use axum::{
     Router,
 };
 use hyper_util::{
-    client::legacy::{connect::HttpConnector, Client},
+    client::legacy::{
+        connect::{
+            dns::{GaiResolver, Name},
+            HttpConnector,
+        },
+        Client,
+    },
     rt::TokioExecutor,
 };
+use tower_service::Service;
 use tracing::error;
 
 use crate::port::{app_name_from_host, Route};
 
 use super::SharedRegistry;
 
-type ProxyClient = Client<HttpConnector, Body>;
+type ProxyClient = Client<HttpConnector<LocalhostResolver>, Body>;
+
+#[derive(Clone)]
+pub(super) struct LocalhostResolver {
+    gai: GaiResolver,
+}
+
+impl LocalhostResolver {
+    fn new() -> Self {
+        Self {
+            gai: GaiResolver::new(),
+        }
+    }
+}
+
+impl Service<Name> for LocalhostResolver {
+    type Response = std::vec::IntoIter<SocketAddr>;
+    type Error = io::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, cx: &mut TaskContext<'_>) -> Poll<Result<(), Self::Error>> {
+        self.gai.poll_ready(cx)
+    }
+
+    fn call(&mut self, name: Name) -> Self::Future {
+        if name.as_str() == "localhost" {
+            let addrs = Vec::from([
+                SocketAddr::from((Ipv6Addr::LOCALHOST, 0)),
+                SocketAddr::from((Ipv4Addr::LOCALHOST, 0)),
+            ]);
+            return Box::pin(async move { Ok(addrs.into_iter()) });
+        }
+
+        let future = self.gai.call(name);
+        Box::pin(async move {
+            future
+                .await
+                .map(|addrs| addrs.collect::<Vec<_>>().into_iter())
+        })
+    }
+}
 
 #[derive(Clone)]
 struct AppState {
@@ -28,7 +82,8 @@ struct AppState {
 }
 
 pub(super) fn client() -> ProxyClient {
-    Client::builder(TokioExecutor::new()).build(HttpConnector::new())
+    Client::builder(TokioExecutor::new())
+        .build(HttpConnector::new_with_resolver(LocalhostResolver::new()))
 }
 
 pub(super) fn router(
@@ -207,6 +262,23 @@ mod tests {
         assert_eq!(request.headers()[header::HOST], "test-app.localhost");
         assert_eq!(request.headers()["x-forwarded-proto"], "https");
         assert_eq!(request.headers()["x-forwarded-host"], "test-app.localhost");
+    }
+
+    #[tokio::test]
+    async fn resolves_localhost_to_both_loopback_families() {
+        let addrs = LocalhostResolver::new()
+            .call("localhost".parse().unwrap())
+            .await
+            .unwrap()
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            addrs,
+            Vec::from([
+                SocketAddr::from((Ipv6Addr::LOCALHOST, 0)),
+                SocketAddr::from((Ipv4Addr::LOCALHOST, 0)),
+            ])
+        );
     }
 
     fn test_registry() -> SharedRegistry {
